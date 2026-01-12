@@ -123,3 +123,138 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ============================================
+   PRINT STYLES - For PDF Generation
+   ============================================ */
+@media print {
+  /* Page setup */
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  /* Force light mode and ensure colors print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  html, body {
+    background: white !important;
+    color: #1e293b !important;
+  }
+
+  /* Hide non-printable elements */
+  .no-print,
+  [data-hide-print="true"] {
+    display: none !important;
+  }
+
+  /* Force light mode styling */
+  .dark,
+  [class*="dark:"] {
+    background-color: white !important;
+    color: #1e293b !important;
+  }
+
+  /* Section page breaks */
+  .pdf-section {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin-bottom: 16px !important;
+    background: white !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 16px !important;
+  }
+
+  .pdf-page-break-before {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+
+  /* Override dark mode backgrounds - use attribute selectors */
+  [class*="bg-slate-9"],
+  [class*="bg-slate-8"] {
+    background-color: white !important;
+  }
+
+  /* Ensure all containers have light background */
+  .pdf-section,
+  [class*="rounded-2xl"],
+  [class*="rounded-xl"] {
+    background-color: white !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  /* Ensure colored elements maintain their colors */
+  .bg-emerald-500, .bg-emerald-600, .from-emerald-600, .to-emerald-400 {
+    background-color: #10b981 !important;
+  }
+  .bg-blue-500, .bg-blue-600 {
+    background-color: #3b82f6 !important;
+  }
+  .bg-amber-500, .bg-amber-600 {
+    background-color: #f59e0b !important;
+  }
+  .bg-red-500, .bg-red-600 {
+    background-color: #ef4444 !important;
+  }
+  .bg-purple-500, .bg-purple-600 {
+    background-color: #8b5cf6 !important;
+  }
+
+  .text-emerald-500, .text-emerald-600 {
+    color: #10b981 !important;
+  }
+  .text-blue-500, .text-blue-600 {
+    color: #3b82f6 !important;
+  }
+  .text-amber-500, .text-amber-600 {
+    color: #f59e0b !important;
+  }
+  .text-red-500, .text-red-600 {
+    color: #ef4444 !important;
+  }
+  .text-purple-500, .text-purple-600 {
+    color: #8b5cf6 !important;
+  }
+
+  /* Ensure headings are dark */
+  h1, h2, h3, h4, h5, h6 {
+    color: #0f172a !important;
+  }
+
+  /* Paragraphs readable */
+  p {
+    color: #334155 !important;
+  }
+
+  /* Charts and SVGs */
+  svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Links */
+  a {
+    color: #3b82f6 !important;
+    text-decoration: none !important;
+  }
+
+  /* Cards and containers */
+  .rounded-2xl, .rounded-xl, .rounded-lg {
+    border-radius: 8px !important;
+  }
+
+  /* Backdrop blur doesn't work in print */
+  .backdrop-blur-sm {
+    backdrop-filter: none !important;
+  }
+
+  /* Shadow removal for cleaner print */
+  .shadow-lg, .shadow-xl, .shadow-2xl {
+    box-shadow: none !important;
+  }
+}
