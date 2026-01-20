@@ -377,7 +377,7 @@ export const AnalysisResultView = ({ result, profile, onReset, isDark }: Props) 
                    Recruiting Compatibility
                 </h3>
 
-                <div className="h-[200px] w-full mb-4">
+                <div className="h-[200px] w-full mb-4 print:hidden">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} layout="vertical" margin={{ left: 0, right: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1e293b" : "#e2e8f0"} horizontal={false} />
@@ -411,14 +411,14 @@ export const AnalysisResultView = ({ result, profile, onReset, isDark }: Props) 
               </div>
 
               {/* Probability Grid */}
-              <div className="grid grid-cols-5 gap-2 mt-2">
+              <div className="grid grid-cols-5 gap-2 mt-2 print:mt-0 print:gap-3">
                  {['D1', 'D2', 'D3', 'NAIA', 'JUCO'].map((lvl) => {
                     const score = visibilityScores.find(v => normalizeLevel(v.level) === lvl)?.visibilityPercent || 0;
                     const status = getProbabilityStatus(score);
                     return (
-                       <div key={lvl} className="bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-white/5 rounded p-2 text-center">
-                          <div className="text-slate-900 dark:text-white font-bold text-xs mb-0.5">{lvl}</div>
-                          <div className={`text-[10px] font-medium leading-tight ${status.textClass}`}>
+                       <div key={lvl} className="bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-white/5 rounded p-2 print:p-3 text-center">
+                          <div className="text-slate-900 dark:text-white font-bold text-xs print:text-sm mb-0.5">{lvl}</div>
+                          <div className={`text-[10px] print:text-xs font-medium leading-tight ${status.textClass}`}>
                              {status.label}
                           </div>
                        </div>
