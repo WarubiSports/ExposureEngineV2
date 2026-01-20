@@ -65,17 +65,23 @@ Your job is to:
 ### A - Classify League Tier
 Look at the latest season and use the highest level league the player is currently in.
 
-**For boys:**
+**CRITICAL OVERRIDE - Check experienceLevel FIRST:**
+- If experienceLevel is "Pro_Academy_Reserve" OR "International_Academy_U19": **OVERRIDE to Elite tier** regardless of league selected. These players are at top international academies (Bundesliga, La Liga, etc.) which are equivalent to or better than MLS NEXT/ECNL.
+- If experienceLevel is "Semi_Pro_UPSL_NPSL_WPSL": **OVERRIDE to at least High tier** (can be Elite if they also played MLS NEXT/ECNL).
+
+**For boys (only if no override above):**
 - Elite boys: MLS_NEXT, ECNL
 - High boys: ECNL_RL, USYS_National_League, USL_Academy
 - Mid boys: NPL and strong regional or state premier leagues
 - Low boys: High_School, Elite_Local, Other
 
-**For girls:**
+**For girls (only if no override above):**
 - Elite girls: ECNL, Girls_Academy
 - High girls: ECNL_RL, USYS_National_League, USL_Academy
 - Mid girls: NPL and strong regional leagues
 - Low girls: High_School, Elite_Local, Other
+
+**If no seasons recorded:** Default to Low tier unless experienceLevel provides an override (see above).
 
 ### B - Classify Ability Band
 Use both self assessment and role plus minutes.
