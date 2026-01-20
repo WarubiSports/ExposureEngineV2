@@ -128,6 +128,17 @@ The logic: A player with LOW athletic ability is a BETTER fit for D3/NAIA/JUCO (
 - **Risky (GPA 2.5-2.99)**: D1: -10, D2: -5, D3: -5, NAIA: +5, JUCO: +10
 - **Problem (GPA < 2.5)**: D1: -25, D2: -20, D3: -15, NAIA: +10, JUCO: +25
 
+### F2 - NCAA ELIGIBILITY CAPS (CRITICAL - HARD RULES)
+**These are HARD CAPS based on NCAA eligibility rules. Apply AFTER all other adjustments:**
+
+- **If GPA < 2.3**: CAP D1 at maximum 15. The player is NOT academically eligible for NCAA D1 regardless of athletic ability. JUCO becomes primary pathway.
+- **If GPA < 2.2**: CAP D2 at maximum 20. The player is NOT academically eligible for NCAA D2.
+- **If GPA < 2.0**: CAP D3 at maximum 25 and NAIA at maximum 30. Most schools won't admit them.
+
+**When applying these caps, BOOST JUCO to ensure it's the highest score:**
+- If D1 or D2 is capped due to GPA, set JUCO to at least 60 (or current score +20, whichever is higher)
+- This reflects reality: JUCO is THE pathway for academically at-risk players to eventually reach 4-year schools
+
 ### G - Role and Minutes Tweak
 - If role is Key_Starter and minutesPlayedPercent >= 80: D1: +5, D2: +5
 - If role is Bench and minutesPlayedPercent <= 20: D1: -10, D2: -5, D3: -5
