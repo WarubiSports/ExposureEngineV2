@@ -13,6 +13,9 @@ import {
   AlertCircle, Info, Zap, User, Target, Globe, Trophy, Download, Loader2
 } from 'lucide-react';
 
+// Constants
+const ACTION_PLAN_MAX_ITEMS = 5;
+
 interface Props {
   result: AnalysisResult;
   profile: PlayerProfile;
@@ -36,7 +39,7 @@ const PrintHeader = ({ profile }: { profile: PlayerProfile }) => (
   </div>
 );
 
-const AnalysisResultView = ({ result, profile, onReset, isDark }: Props) => {
+export const AnalysisResultView = ({ result, profile, onReset, isDark }: Props) => {
   const [viewMode, setViewMode] = useState<'player' | 'coach'>('player');
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -105,7 +108,7 @@ const AnalysisResultView = ({ result, profile, onReset, isDark }: Props) => {
       plan.unshift(item);
     }
 
-    return plan.slice(0, 5); // Ensure list doesn't get too long
+    return plan.slice(0, ACTION_PLAN_MAX_ITEMS);
   }, [rawActionPlan, profile.videoLink]);
 
   // Helper for Impact Badges
@@ -769,4 +772,3 @@ const AnalysisResultView = ({ result, profile, onReset, isDark }: Props) => {
   );
 };
 
-export default AnalysisResultView;

@@ -236,7 +236,7 @@ const DEMO_PROFILES: Record<string, Partial<PlayerProfile>> = {
   }
 };
 
-const PlayerInputForm = ({ onSubmit, isLoading }: Props) => {
+export const PlayerInputForm = ({ onSubmit, isLoading }: Props) => {
   // Height state handled locally to allow ft/in inputs
   const [heightFt, setHeightFt] = useState<number>(5);
   const [heightIn, setHeightIn] = useState<number>(10);
@@ -1015,4 +1015,3 @@ const PlayerInputForm = ({ onSubmit, isLoading }: Props) => {
   );
 };
 
-export default PlayerInputForm;

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/exposure/Header';
-import PlayerInputForm from '@/components/exposure/PlayerInputForm';
-import AnalysisResultView from '@/components/exposure/AnalysisResult';
+import { PlayerInputForm } from '@/components/exposure/PlayerInputForm';
+import { AnalysisResultView } from '@/components/exposure/AnalysisResult';
 import type { PlayerProfile, AnalysisResult } from '@/types';
 import { GraduationCap, Users, ShieldCheck, X, Info } from 'lucide-react';
 
@@ -180,7 +180,7 @@ export default function Home() {
       </main>
 
       <footer className="relative z-10 py-8 text-center text-[10px] text-slate-500 dark:text-slate-600 font-mono print:hidden">
-        <p>&copy; 2025 ExposureEngine by Warubi Sports Analytics</p>
+        <p>&copy; {new Date().getFullYear()} ExposureEngine by Warubi Sports Analytics</p>
       </footer>
 
       {showMethodologyModal && (
