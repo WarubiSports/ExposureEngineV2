@@ -148,8 +148,13 @@
 
   /* Hide non-printable elements */
   .no-print,
-  [data-hide-print="true"] {
+  .print\:hidden,
+  [data-hide-print="true"],
+  [data-no-print="true"] {
     display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
   }
 
   /* Force light mode styling */

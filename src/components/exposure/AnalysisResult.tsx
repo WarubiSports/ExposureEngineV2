@@ -377,7 +377,7 @@ export const AnalysisResultView = ({ result, profile, onReset, isDark }: Props) 
                    Recruiting Compatibility
                 </h3>
 
-                <div className="h-[200px] w-full mb-4 print:hidden">
+                <div className="h-[200px] w-full mb-4 print:hidden" data-no-print="true">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} layout="vertical" margin={{ left: 0, right: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1e293b" : "#e2e8f0"} horizontal={false} />
