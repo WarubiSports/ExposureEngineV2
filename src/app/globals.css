@@ -242,6 +242,17 @@
     height: auto !important;
   }
 
+  /* Ensure chart containers clip overflow */
+  .recharts-wrapper,
+  .recharts-surface {
+    overflow: hidden !important;
+  }
+
+  /* Constrain bar chart container */
+  [class*="overflow-hidden"] {
+    overflow: hidden !important;
+  }
+
   /* Links */
   a {
     color: #3b82f6 !important;
