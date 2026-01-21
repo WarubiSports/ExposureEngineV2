@@ -117,14 +117,19 @@ Score each level 0-100 before market adjustments.
 - Mid girls (NPL, regional): D1: 15, D2: 35, D3: 60, NAIA: 45, JUCO: 35
 - Low girls (local/HS): D1: 5, D2: 20, D3: 45, NAIA: 45, JUCO: 50
 
-### E - Adjust Scores for Ability
-**CRITICAL: Low ability means LOWER levels are BETTER FIT (higher score), not worse!**
+### E - Adjust Scores for Ability (CRITICAL - THIS SHIFTS THE PEAK FIT)
+**Ability band determines WHERE the player's best fit is, not just minor adjustments.**
 
-- If ability band is **High**: D1: +20, D2: +10, D3: 0, NAIA: -5, JUCO: -10
-- If ability band is **Medium**: D1: 0, D2: +5, D3: +5, NAIA: 0, JUCO: 0
-- If ability band is **Low**: D1: -25, D2: -15, D3: +15, NAIA: +20, JUCO: +25
+**High ability** (most ratings Top_10_Percent/Elite + Key_Starter 70%+ mins):
+Peak fit = D1. D1: +15, D2: +5, D3: -10, NAIA: -15, JUCO: -20
 
-The logic: A player with LOW athletic ability is a BETTER fit for D3/NAIA/JUCO (realistic targets) and WORSE fit for D1/D2 (unrealistic). Don't penalize lower levels for low ability - that's where they BELONG.
+**Medium ability** (Above_Average mix, decent starter):
+Peak fit = D2/D3. D1: -20, D2: +10, D3: +15, NAIA: +5, JUCO: 0
+
+**Low ability** (Average/Below_Average, bench/rotation):
+Peak fit = D3/NAIA/JUCO. D1: -40, D2: -25, D3: +10, NAIA: +20, JUCO: +25
+
+The logic: Ability determines the REALISTIC level. An Elite league player with Medium ability is VISIBLE to D1 coaches but their BEST FIT is D2/D3. The score should reflect where they'll actually land, not just who sees them.
 
 ### F - Adjust Scores for Academics
 **D3 schools do NOT offer athletic scholarships - 80% of D3 athletes get ACADEMIC aid. High academics = huge D3 advantage.**
