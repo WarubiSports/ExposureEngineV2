@@ -86,14 +86,18 @@ Look at the latest season and use the highest level league the player is current
 ### B - Classify Ability Band
 Use both self assessment and role plus minutes.
 
-1. Start from self ratings (speed, strength, endurance, workRate, technical, tactical):
-   - If most categories are Top_10_Percent or Elite: start ability band as **High**
-   - If there is a mix of Above_Average and Top_10_Percent with few Below_Average: start as **Medium**
-   - If most are Average or Below_Average: start as **Low**
+1. Count self ratings (speed, strength, endurance, workRate, technical, tactical):
+   - Count how many are Elite or Top_10_Percent → call this "elite_count"
+   - Count how many are Below_Average → call this "weak_count"
 
-2. Adjust for role and minutes:
-   - If role is Key_Starter and minutesPlayedPercent >= 70: move ability UP by one band (cap at High)
-   - If role is Bench or minutesPlayedPercent <= 30: move ability DOWN by one band (floor at Low)
+   **Classification:**
+   - If elite_count >= 4: start ability band as **High**
+   - If elite_count >= 2 AND weak_count <= 1: start as **Medium**
+   - Otherwise: start as **Low**
+
+2. Adjust for role and minutes (ONLY adjusts band, doesn't stack with Section G):
+   - If role is Key_Starter AND minutesPlayedPercent >= 70: move ability UP by one band (cap at High)
+   - If role is Bench OR minutesPlayedPercent <= 30: move ability DOWN by one band (floor at Low)
 
 ### C - Classify Academic Band
 Using GPA:
@@ -150,9 +154,10 @@ The logic: Ability determines the REALISTIC level. An Elite league player with M
 - If D1 or D2 is capped due to GPA, set JUCO to at least 60 (or current score +20, whichever is higher)
 - This reflects reality: JUCO is THE pathway for academically at-risk players to eventually reach 4-year schools
 
-### G - Role and Minutes Tweak
-- If role is Key_Starter and minutesPlayedPercent >= 80: D1: +5, D2: +5
-- If role is Bench and minutesPlayedPercent <= 20: D1: -10, D2: -5, D3: -5
+### G - Role and Minutes Tweak (Additional bonus for HEAVY minutes - different threshold than Section B)
+Note: Section B uses 70%+ to adjust ability band. This section gives a SMALL ADDITIONAL bonus for 80%+ minutes.
+- If role is Key_Starter AND minutesPlayedPercent >= 80: D1: +5, D2: +5
+- If role is Bench AND minutesPlayedPercent <= 20: D1: -10, D2: -5, D3: -5
 
 ### G2 - Maturity & Experience Bonus (CRITICAL)
 College coaches prefer players with adult-level or international experience.
@@ -226,10 +231,15 @@ Map your calculated values to these fields:
    - bottleneck: main reason for current stage (not progressing)
    - advice: specific action to move to next stage
 4. **benchmarkAnalysis** (3 entries):
-   - "Exposure": userScore from League Tier (Elite=95, High=80, Mid=65, Low=45)
-   - "Competition": userScore from Ability Band (High=90, Med=75, Low=60)
+   - "Exposure": userScore from League Tier (Elite=95, High=75, Mid=55, Low=35)
+   - "Competition": userScore from Ability Band (High=95, Med=70, Low=50)
    - "Academics": userScore from Academic Band (High=95, Solid=80, Risky=60, Problem=40)
-   - d1Average: (90, 90, 85), d3Average: (70, 70, 80)
+   - d1Average: (90, 85, 85), d3Average: (65, 65, 75)
+
+   **Alignment logic:**
+   - If benchmark shows player AT or ABOVE D1 avg → visibility should show D1 as top fit
+   - If benchmark shows player BETWEEN D1 and D3 avg → visibility should show D2/D3 as top fit
+   - If benchmark shows player BELOW D3 avg → visibility should show NAIA/JUCO as top fit
 5. **actionPlan**: timeframe (Next_30_Days/Next_90_Days/Next_12_Months), description, impact (High/Medium/Low)
 6. **coachShortEvaluation**: brutally honest one-sentence summary
 7. **plainLanguageSummary**: 2-3 paragraph reality check for parents/players
