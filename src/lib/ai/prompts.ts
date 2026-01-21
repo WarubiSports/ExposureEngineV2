@@ -1,7 +1,62 @@
 import type { PlayerProfile, Position } from "@/types";
+import type { ComputedScores } from "@/lib/scoring";
 
 // ============================================================================
-// System Prompt with Research Data + Original Scoring Model
+// NARRATIVE SYSTEM PROMPT - AI generates text only, scores are pre-computed
+// ============================================================================
+
+export const NARRATIVE_SYSTEM_PROMPT = `You are a veteran US College Soccer Recruiting Director and director of scouting.
+
+You receive:
+1. Player profile data (bio, academics, athletic ratings, seasons, market status)
+2. PRE-COMPUTED SCORES - These are deterministic calculations from our algorithm. DO NOT recalculate them.
+
+Your job is to generate NARRATIVE TEXT ONLY:
+- Explain what the scores mean for this specific player
+- Identify key strengths and risks with detailed explanations
+- Create a personalized action plan
+- Write a brutally honest coach evaluation
+
+## MARKET RESEARCH DATA (for context)
+
+### Youth League Tiers
+**Boys (D1 Visibility):** MLS NEXT > ECNL > USL Academy > USYS NL > ECNL RL > NPL > HS > Local
+**Girls:** ECNL > Girls Academy > USYS NL > ECNL RL > NPL > HS > Local
+
+### College Soccer Reality
+- D1: ~1.1% of HS players make it, 37% international (men), 11% international (women)
+- D2: ~2.5% make it, partial scholarships (9 men's / 9.9 women's)
+- D3: ~4.3% make it, NO athletic scholarships (80% get academic aid)
+- NAIA: ~3% make it, 12 scholarships per team
+- JUCO: Pathway option, 18-24 scholarships per team
+
+### Academic Eligibility
+- D1: 2.3 minimum core GPA required
+- D2: 2.2 minimum core GPA required
+- D3/NAIA/JUCO: Varies by institution
+
+## CONSTRAINT LOGIC
+
+You MUST identify 2-4 keyRisks for EVERY player. No player is perfect.
+
+- **Severity "High"**: Hard blockers (No Video, GPA < 2.3 for D1, Playing Rec Only)
+- **Severity "Medium"**: Factors limiting higher levels (GPA removes certain schools, low minutes)
+- **Severity "Low"**: Optimization areas (specific skill gaps, low outreach volume)
+
+**Explain the LOGIC in each risk.** Don't just say "GPA". Say "Your 3.2 GPA is solid, but it removes High-Academic D1 schools, reducing your market by 30%."
+
+## CRITICAL CONSISTENCY RULE
+
+**Your text MUST match the pre-computed visibility scores.**
+
+- If D1 has the highest visibilityPercent, your summary MUST say "D1 is your strongest target"
+- If D3 has the highest score, recommend D3
+- The level with the highest visibilityPercent is ALWAYS the primary recommendation
+
+Be honest and ruthless. Sugar-coating hurts their planning.`;
+
+// ============================================================================
+// Legacy System Prompt (kept for reference)
 // ============================================================================
 
 export const SYSTEM_PROMPT = `You are a veteran US College Soccer Recruiting Director and director of scouting.
@@ -421,6 +476,152 @@ IMPORTANT:
 - Apply outreach multiplier based on contact patterns
 - Ensure keyRisks has 2-4 items with detailed explanations
 - Be ruthlessly honest`;
+}
+
+// ============================================================================
+// NARRATIVE PROMPT BUILDER - Uses pre-computed scores
+// ============================================================================
+
+export function buildNarrativePrompt(
+  profile: PlayerProfile,
+  computedScores: ComputedScores
+): string {
+  const currentYear = new Date().getFullYear();
+  const yearsUntilCollege = profile.gradYear - currentYear;
+  const gradeLevel = getGradeLevel(yearsUntilCollege);
+
+  // Calculate age
+  const birthDate = new Date(profile.dateOfBirth);
+  const today = new Date();
+  const age = (
+    (today.getTime() - birthDate.getTime()) /
+    (365.25 * 24 * 60 * 60 * 1000)
+  ).toFixed(1);
+
+  // Format seasons
+  const seasonsText =
+    profile.seasons.length > 0
+      ? profile.seasons
+          .map(
+            (s) =>
+              `- ${s.year}: ${s.teamName} (${s.league.join(", ")}) - Role: ${s.mainRole}, ${s.minutesPlayedPercent}% minutes, ${s.goals}G/${s.assists}A${s.honors ? `, Honors: ${s.honors}` : ""}`
+          )
+          .join("\n")
+      : "No seasons recorded";
+
+  // Format events
+  const eventsText =
+    profile.events.length > 0
+      ? profile.events
+          .map(
+            (e) =>
+              `- ${e.name} (${e.type}) - Colleges noted: ${e.collegesNoted || "None specified"}`
+          )
+          .join("\n")
+      : "No events recorded";
+
+  // Format visibility scores for the AI
+  const visibilityText = computedScores.visibilityScores
+    .map((v) => `- ${v.level}: ${v.visibilityPercent}%`)
+    .join("\n");
+
+  // Find best fit level
+  const bestFit = computedScores.visibilityScores.reduce((best, current) =>
+    current.visibilityPercent > best.visibilityPercent ? current : best
+  );
+
+  // Format benchmark scores
+  const benchmarkText = computedScores.benchmarkAnalysis
+    .map(
+      (b) =>
+        `- ${b.category}: ${b.userScore} (D1 avg: ${b.d1Average}, D3 avg: ${b.d3Average})`
+    )
+    .join("\n");
+
+  return `Generate narrative analysis for this player. All scores are PRE-COMPUTED - focus on explaining what they mean.
+
+## PLAYER PROFILE
+
+**Basic Info:**
+- Name: ${profile.firstName} ${profile.lastName}
+- Gender: ${profile.gender}
+- Age: ${age} years (DOB: ${profile.dateOfBirth})
+- Graduation Year: ${profile.gradYear} (${gradeLevel})
+- State: ${profile.state}
+- Position: ${profile.position}${profile.secondaryPositions?.length ? ` (also: ${profile.secondaryPositions.join(", ")})` : ""}
+- Experience Level: ${profile.experienceLevel}
+
+**Season History:**
+${seasonsText}
+
+**Events:**
+${eventsText}
+
+**Academics:**
+- GPA: ${profile.academics.gpa}
+- Test Score: ${profile.academics.testScore || "Not provided"}
+
+**Athletic Self-Assessment:**
+- Speed: ${profile.athleticProfile?.speed || "N/A"}
+- Strength: ${profile.athleticProfile?.strength || "N/A"}
+- Endurance: ${profile.athleticProfile?.endurance || "N/A"}
+- Work Rate: ${profile.athleticProfile?.workRate || "N/A"}
+- Technical: ${profile.athleticProfile?.technical || "N/A"}
+- Tactical: ${profile.athleticProfile?.tactical || "N/A"}
+
+**Market Status:**
+- Has Video: ${profile.videoLink ? "YES" : "NO"}
+- Coaches Contacted: ${profile.coachesContacted}
+- Responses: ${profile.responsesReceived}
+- Offers: ${profile.offersReceived}
+
+---
+
+## PRE-COMPUTED SCORES (DO NOT RECALCULATE)
+
+**Classifications:**
+- League Tier: ${computedScores.leagueTier}
+- Ability Band: ${computedScores.abilityBand}
+- Academic Band: ${computedScores.academicBand}
+
+**Visibility Scores (highest = best fit):**
+${visibilityText}
+
+**BEST FIT LEVEL: ${bestFit.level} at ${bestFit.visibilityPercent}%**
+
+**Benchmarks:**
+${benchmarkText}
+
+**Funnel Stage:** ${computedScores.funnelAnalysis.stage}
+
+**Multipliers Applied:**
+- Video: ${computedScores.videoMultiplier}x ${!profile.videoLink ? "(NO VIDEO PENALTY)" : ""}
+- Outreach: ${computedScores.outreachMultiplier}x ${computedScores.outreachTag ? `(${computedScores.outreachTag})` : ""}
+
+---
+
+## YOUR TASK
+
+Generate narrative content that explains these scores. Return JSON with this structure:
+
+{
+  "keyStrengths": ["<3-5 specific strengths based on profile>"],
+  "keyRisks": [
+    { "category": "<League|Minutes|Academics|Events|Location|Media|Communication|Timeline|Competition>", "message": "<specific explanation with logic - WHY is this a risk?>", "severity": "<Low|Medium|High>" }
+  ],
+  "actionPlan": [
+    { "timeframe": "<Next_30_Days|Next_90_Days|Next_12_Months>", "description": "<specific, actionable task>", "impact": "<High|Medium|Low>" }
+  ],
+  "plainLanguageSummary": "<2-3 paragraphs explaining what these scores mean for the player and their realistic path forward. MUST reference ${bestFit.level} as the best fit since it has the highest score.>",
+  "coachShortEvaluation": "<brutally honest one-sentence coach perspective>"
+}
+
+IMPORTANT:
+- Generate 2-4 keyRisks with detailed explanations
+- Action plan should be specific to THIS player's situation
+- If no video (videoMultiplier = 0.6), FIRST action item MUST be about creating highlights
+- plainLanguageSummary MUST recommend ${bestFit.level} as primary target (it has the highest visibility score)
+- Be ruthlessly honest in coachShortEvaluation`;
 }
 
 // ============================================================================

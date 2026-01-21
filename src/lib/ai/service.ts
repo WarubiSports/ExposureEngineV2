@@ -1,25 +1,13 @@
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 import type { PlayerProfile, AnalysisResult, VisibilityScore, ReadinessScore, RiskFlag, ActionItem, FunnelAnalysis, BenchmarkMetric } from "@/types";
-import { SYSTEM_PROMPT, buildAnalysisPrompt, getGenderSpecificContext } from "./prompts";
+import { NARRATIVE_SYSTEM_PROMPT, buildNarrativePrompt, getGenderSpecificContext } from "./prompts";
+import { computeAllScores, type ComputedScores } from "@/lib/scoring";
 
 // ============================================================================
-// Zod Schemas for AI Response Validation
+// Zod Schemas for AI Narrative Response Validation
+// AI only generates narrative content - scores are computed server-side
 // ============================================================================
-
-const AIVisibilityScoreSchema = z.object({
-  level: z.enum(["D1", "D2", "D3", "NAIA", "JUCO"]),
-  visibilityPercent: z.number().min(0).max(100),
-  notes: z.string(),
-});
-
-const AIReadinessScoreSchema = z.object({
-  athletic: z.number().min(0).max(100),
-  technical: z.number().min(0).max(100),
-  tactical: z.number().min(0).max(100),
-  academic: z.number().min(0).max(100),
-  market: z.number().min(0).max(100),
-});
 
 const AIRiskFlagSchema = z.object({
   category: z.string(),
@@ -33,108 +21,49 @@ const AIActionItemSchema = z.object({
   impact: z.enum(["High", "Medium", "Low"]),
 });
 
-const AIFunnelAnalysisSchema = z.object({
-  stage: z.enum(["Invisible", "Outreach", "Conversation", "Evaluation", "Closing"]),
-  conversionRate: z.string(),
-  bottleneck: z.string(),
-  advice: z.string(),
-});
-
-const AIBenchmarkMetricSchema = z.object({
-  category: z.string(),
-  userScore: z.number().min(0).max(100),
-  d1Average: z.number().min(0).max(100),
-  d3Average: z.number().min(0).max(100),
-  feedback: z.string(),
-});
-
-// Full AI response schema matching original types
-const AIResponseSchema = z.object({
-  visibilityScores: z.array(AIVisibilityScoreSchema),
-  readinessScore: AIReadinessScoreSchema,
+// Narrative-only response schema - AI provides text, server provides numbers
+const AINarrativeResponseSchema = z.object({
   keyStrengths: z.array(z.string()),
   keyRisks: z.array(AIRiskFlagSchema),
   actionPlan: z.array(AIActionItemSchema),
   plainLanguageSummary: z.string(),
   coachShortEvaluation: z.string(),
-  funnelAnalysis: AIFunnelAnalysisSchema,
-  benchmarkAnalysis: z.array(AIBenchmarkMetricSchema),
 });
 
 // ============================================================================
-// Transform AI Response to App Types
+// Combine Server Scores with AI Narrative
 // ============================================================================
 
-function transformAIResponse(aiResponse: z.infer<typeof AIResponseSchema>): AnalysisResult {
-  // Transform visibility scores - ensure we have all levels
-  const visibilityScores: VisibilityScore[] = aiResponse.visibilityScores.map(score => ({
-    level: score.level,
-    visibilityPercent: score.visibilityPercent,
-    notes: score.notes,
-  }));
-
-  // Ensure all 5 levels exist
-  const levels = ["D1", "D2", "D3", "NAIA", "JUCO"] as const;
-  for (const level of levels) {
-    if (!visibilityScores.find(v => v.level === level)) {
-      visibilityScores.push({
-        level,
-        visibilityPercent: 0,
-        notes: "Data not available",
-      });
-    }
-  }
-
-  // Transform readiness score
-  const readinessScore: ReadinessScore = {
-    athletic: aiResponse.readinessScore.athletic,
-    technical: aiResponse.readinessScore.technical,
-    tactical: aiResponse.readinessScore.tactical,
-    academic: aiResponse.readinessScore.academic,
-    market: aiResponse.readinessScore.market,
-  };
-
+function combineScoresAndNarrative(
+  computedScores: ComputedScores,
+  aiNarrative: z.infer<typeof AINarrativeResponseSchema>
+): AnalysisResult {
   // Transform key risks
-  const keyRisks: RiskFlag[] = aiResponse.keyRisks.map(risk => ({
+  const keyRisks: RiskFlag[] = aiNarrative.keyRisks.map(risk => ({
     category: risk.category,
     message: risk.message,
     severity: risk.severity,
   }));
 
   // Transform action plan
-  const actionPlan: ActionItem[] = aiResponse.actionPlan.map(item => ({
+  const actionPlan: ActionItem[] = aiNarrative.actionPlan.map(item => ({
     timeframe: item.timeframe,
     description: item.description,
     impact: item.impact,
   }));
 
-  // Transform funnel analysis
-  const funnelAnalysis: FunnelAnalysis = {
-    stage: aiResponse.funnelAnalysis.stage,
-    conversionRate: aiResponse.funnelAnalysis.conversionRate,
-    bottleneck: aiResponse.funnelAnalysis.bottleneck,
-    advice: aiResponse.funnelAnalysis.advice,
-  };
-
-  // Transform benchmark analysis
-  const benchmarkAnalysis: BenchmarkMetric[] = aiResponse.benchmarkAnalysis.map(metric => ({
-    category: metric.category,
-    userScore: metric.userScore,
-    d1Average: metric.d1Average,
-    d3Average: metric.d3Average,
-    feedback: metric.feedback,
-  }));
-
   return {
-    visibilityScores,
-    readinessScore,
-    keyStrengths: aiResponse.keyStrengths,
+    // Server-computed scores (deterministic)
+    visibilityScores: computedScores.visibilityScores,
+    readinessScore: computedScores.readinessScore,
+    benchmarkAnalysis: computedScores.benchmarkAnalysis,
+    funnelAnalysis: computedScores.funnelAnalysis,
+    // AI-generated narrative (creative text)
+    keyStrengths: aiNarrative.keyStrengths,
     keyRisks,
     actionPlan,
-    plainLanguageSummary: aiResponse.plainLanguageSummary,
-    coachShortEvaluation: aiResponse.coachShortEvaluation,
-    funnelAnalysis,
-    benchmarkAnalysis,
+    plainLanguageSummary: aiNarrative.plainLanguageSummary,
+    coachShortEvaluation: aiNarrative.coachShortEvaluation,
   };
 }
 
@@ -151,10 +80,14 @@ export class ExposureAnalysisService {
   }
 
   async analyzePlayer(profile: PlayerProfile): Promise<AnalysisResult> {
-    const userPrompt = buildAnalysisPrompt(profile);
+    // Step 1: Compute all scores server-side (deterministic)
+    const computedScores = computeAllScores(profile);
+
+    // Step 2: Build prompt with pre-computed scores for AI narrative generation
+    const userPrompt = buildNarrativePrompt(profile, computedScores);
     const genderContext = getGenderSpecificContext(profile.gender);
 
-    const fullSystemPrompt = `${SYSTEM_PROMPT}\n\n${genderContext}`;
+    const fullSystemPrompt = `${NARRATIVE_SYSTEM_PROMPT}\n\n${genderContext}`;
 
     try {
       const response = await this.genai.models.generateContent({
@@ -164,7 +97,7 @@ export class ExposureAnalysisService {
           systemInstruction: fullSystemPrompt,
           responseMimeType: "application/json",
           temperature: 0.7,
-          maxOutputTokens: 8192,
+          maxOutputTokens: 4096,
         },
       });
 
@@ -173,12 +106,12 @@ export class ExposureAnalysisService {
         throw new Error("Empty response from AI model");
       }
 
-      // Parse and validate the response
+      // Parse and validate the narrative response
       const parsed = JSON.parse(text);
-      const validated = AIResponseSchema.parse(parsed);
+      const validated = AINarrativeResponseSchema.parse(parsed);
 
-      // Transform to app types
-      return transformAIResponse(validated);
+      // Combine server scores with AI narrative
+      return combineScoresAndNarrative(computedScores, validated);
     } catch (error) {
       console.error("AI Analysis Error:", error);
 
