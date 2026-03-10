@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAnalysisService } from "@/lib/ai";
+import { checkRateLimit } from "@/lib/rate-limit";
 import type { PlayerProfile } from "@/types";
 
 export const maxDuration = 60; // Allow up to 60 seconds for AI analysis
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const { allowed, remaining } = checkRateLimit(ip);
+    if (!allowed) {
+      return NextResponse.json(
+        { success: false, error: "Too many requests. Please try again in a minute." },
+        { status: 429, headers: { "Retry-After": "60", "X-RateLimit-Remaining": "0" } }
+      );
+    }
+
     const profile: PlayerProfile = await request.json();
 
     // Validate required fields
